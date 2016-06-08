@@ -1,0 +1,28 @@
+{
+  "name": "asana-git-tagging",
+  "version": "1.0.0",
+  "description": "Assigns Github tags to Asana tasks - relating to CSE QA status",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Craig Bojko",
+  "license": "ISC",
+  "dependencies": {
+    "asana": "^0.14.0",
+    "clear": "0.0.1",
+    "colors": "^1.1.2",
+    "github": "^0.2.4",
+    "jquery": "^2.2.0",
+    "lodash": "^4.0.1",
+    "moment": "^2.11.1",
+    "node-schedule": "^1.1.0",
+    "promise": "^7.1.1"
+  },
+  "devDependencies": {
+    "npm": "^3.5.3",
+    "open": "0.0.5",
+    "request": "~2.22.0"
+  }
+}
