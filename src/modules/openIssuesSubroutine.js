@@ -41,6 +41,9 @@ function checkTagSubroutine (qaItem) {
     var asanaId = qaItem && qaItem.asana_link && qaItem.asana_link.match(exp)
     var status = qaItem.status
     var title = qaItem.title
+    var assignee = qaItem.assignee
+    var author = qaItem.author
+    var isQAer = false
 
     if (asanaId && asanaId.length > 1) {
       asanaId = parseInt(asanaId[1], 10)
@@ -54,46 +57,69 @@ function checkTagSubroutine (qaItem) {
       // console.log(asanaTags)
 
       // if asanaTags === empty?
-      var currentLabel = asanaTags && asanaTags.data && asanaTags.data[0] && asanaTags.data[0].name
-      for (var label in tags.ids.qa) {
-        for (var j = 0; j < asanaTags.data.length; j++) {
-          if (asanaTags.data[j].name.indexOf(tags.ids.qa[label]) !== -1) {
-            currentLabel = asanaTags.data[j].name
-          }
+      // console.log('ASANA TASK TAGS: '.magenta)
+      // console.log(asanaTags.data)
+
+      var filteredForQaTags = []
+      var filteredForQaTagIds = []
+      var githubStatusLabel = tags.labels.qa[status]
+      var qubitStatusLabel = tags.labels.qa.map[getStatusBasedOnQaer(qaItem)]
+      var statushasChanged = true
+
+      for (var i = 0; i < asanaTags.data.length; i++) {
+        var tag = asanaTags.data[i]
+        if (tags.labels.qa.hasOwnProperty(tag.id)) {
+          filteredForQaTags.push(tag)
+        }
+      }
+      for (var t in filteredForQaTags) {
+        filteredForQaTagIds.push(tags.ids.qa[filteredForQaTags[t].id])
+        if (filteredForQaTags[t].name.indexOf(qubitStatusLabel) !== -1) {
+          statushasChanged = false
         }
       }
 
-      var currentLabelId = tags.ids.qa[currentLabel]
-      var mappedLabel = tags.labels.qa[status]
-      var statushasChanged = (currentLabel && currentLabel.indexOf(mappedLabel) !== -1) ? 0 : 1
-
-      // console.log('ASANA ID: ' + asanaId)
+      // console.log('ASANA ID: '.magenta + asanaId)
+      // console.log('GIT URL: '.magenta + qaItem.issue_link)
       // console.log('---------------------------------------')
-      // console.log('CURRENT LABEL: ' + currentLabel)
-      // console.log('CURRENT LABEL ID: ' + currentLabelId)
-      // console.log('MAPPED LABEL: ' + mappedLabel)
-      // console.log('STATUS CHANGED: ' + statushasChanged)
-      // console.log('=======================================')
+      // console.log('CURRENT LABELS: '.magenta + JSON.stringify(filteredForQaTags))
+      // console.log('GITHUB RESOLVED LABEL: '.magenta + githubStatusLabel)
+      // console.log('QUBIT RESOLVED LABEL: '.magenta + qubitStatusLabel)
+      // console.log('STATUS CHANGED: '.magenta + '%s', (statushasChanged) ? statushasChanged.toString().green : statushasChanged.toString().red)
 
       if (statushasChanged) { // apply changes
-        if (currentLabelId) { // remove current label - undefined if new task
-          if (!dryRun) {
-            var p1 = asanaTasks.removeTag(asanaId, currentLabelId, title)
-            removePromsies.push(p1)
-          } else {
-            var p3 = asanaTasks.dryRemoveTag(asanaId, currentLabelId, title)
-            removePromsies.push(p3)
-          }
-          removals++
+        for (t in filteredForQaTags) {
+          removeTagSubroutine(qaItem, asanaId, filteredForQaTags[t].id, title, asanaTags)
         }
-
-        applyTagSubroutine(qaItem, asanaId, title, asanaTags).then(function () {
-          resolve()
-        })
+        applyTagSubroutine(qaItem, asanaId, title, asanaTags)
+        resolve()
       } else {
         resolve()
       }
+      // console.log('=======================================')
     })
+  })
+}
+
+function removeTagSubroutine (qaItem, asanaId, tagId, title, asanaTags) {
+  return new Promise(function (resolve, reject) {
+    if (!qaItem || !asanaId || !title || !asanaTags) {
+      resolve()
+      return
+    }
+
+    if (tagId) { // remove current label - undefined if new task
+      if (!dryRun) {
+        var p1 = asanaTasks.removeTag(asanaId, tagId, title)
+        removePromsies.push(p1)
+      } else {
+        var p3 = asanaTasks.dryRemoveTag(asanaId, tagId, title)
+        removePromsies.push(p3)
+      }
+      removals++
+    } else {
+      resolve()
+    }
   })
 }
 
@@ -104,29 +130,11 @@ function applyTagSubroutine (qaItem, asanaId, title, asanaTags) {
       return
     }
 
-    var assignee = qaItem.assignee
-    var author = qaItem.author
-    var isQAer = false
     var tag
-
-    if (!assignee) { // Red - QA:Queued
+    if (!qaItem.assignee) { // Red - QA:Queued
       tag = tags.ids.qa.queued
     } else {
-      for (var i = 0; i < engineers.reviewers.length; i++) {
-        if (engineers.reviewers[i].indexOf(assignee) > -1) {
-          isQAer = true
-          break
-        }
-      }
-      if (author.indexOf(assignee) > -1) { // assigned to author - (green)
-        tag = tags.ids.qa['awaiting-revision']
-      } else if (author.indexOf(assignee) === -1 && isQAer) { // NOT assigned to author but is to QAer- (yellow)
-        tag = tags.ids.qa['awaiting-feedback']
-      } else if (author.indexOf(assignee) === -1 && !isQAer) { // NOT assigned to author AND is NOT QAer- (green)
-        tag = tags.ids.qa['awaiting-revision']
-      } else { // Don't know - just assign it red...
-        tag = tags.ids.qa['queued']
-      }
+      tag = getStatusBasedOnQaer(qaItem)
     }
 
     if (!dryRun) {
@@ -145,6 +153,33 @@ function applyTagSubroutine (qaItem, asanaId, title, asanaTags) {
       }
     }
   })
+}
+
+function getStatusBasedOnQaer (qaItem) {
+  var assignee = qaItem.assignee
+  var author = qaItem.author
+  var isQAer = false
+  var tag
+
+  for (var i = 0; i < engineers.reviewers.length; i++) {
+    if (engineers.reviewers[i].indexOf(assignee) > -1) {
+      isQAer = true
+      break
+    }
+  }
+
+  if (assignee === null) {
+    tag = tags.ids.qa['queued']
+  } else if (author.indexOf(assignee) > -1) { // assigned to author - (green)
+    tag = tags.ids.qa['awaiting-revision']
+  } else if (author.indexOf(assignee) === -1 && isQAer) { // NOT assigned to author but is to QAer- (yellow)
+    tag = tags.ids.qa['awaiting-feedback']
+  } else if (author.indexOf(assignee) === -1 && !isQAer) { // NOT assigned to author AND is NOT QAer- (green)
+    tag = tags.ids.qa['awaiting-revision']
+  } else { // Don't know - just assign it red...
+    tag = tags.ids.qa['queued']
+  }
+  return tag
 }
 
 function finishRoutine (_continue) {
@@ -169,18 +204,8 @@ function finishRoutine (_continue) {
 
   Promise.all(removePromsies).then(function (data) {
     console.log('RUNNING FINAL REMOVE SUBROUTINE')
-    var table = new Table({
-      head: ['Label Additions'.cyan, 'Label Removals'.cyan],
-      colWidths: [20, 20]
-    })
-
-    table.push(
-      [additions, removals]
-    )
 
     asanaTasks.printRemoveTable()
-    console.log(table.toString())
-
     _continue()
   }, function (err) {
     console.log('OPEN REMOVE PROMISES FAIL: '.red, err)

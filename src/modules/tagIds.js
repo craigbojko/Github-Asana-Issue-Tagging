@@ -26,7 +26,9 @@ var ids = {
 
 var labels = {
   size: {},
-  qa: {},
+  qa: {
+    map: {}
+  },
   types: {}
 }
 
@@ -40,6 +42,9 @@ labels[ids.urgent] = 'Urgent'
 labels.qa[ids.qa.queued] = 'queued'
 labels.qa[ids.qa['awaiting-revision']] = 'awaiting-revision'
 labels.qa[ids.qa['awaiting-feedback']] = 'awaiting-feedback'
+labels.qa.map[ids.qa.queued] = 'CS:QA:Queued'
+labels.qa.map[ids.qa['awaiting-revision']] = 'CS:QA:Awaiting Revision'
+labels.qa.map[ids.qa['awaiting-feedback']] = 'CS:QA:Awaiting Feedback'
 
 labels.qa['queued'] = 'CS:QA:Queued'
 labels.qa['awaiting-feedback'] = 'CS:QA:Awaiting Feedback'
