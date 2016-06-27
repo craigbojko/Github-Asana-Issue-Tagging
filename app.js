@@ -24,13 +24,13 @@ function logError (error) {
 // Initial run
 try {
   clear()
-  // runApp()
-  runDebug()
+  runApp()
+  // runDebug()
 } catch (e) {
   logError(e)
 }
 
-try{
+try {
   // Schedule run
   var rule = new cron.RecurrenceRule()
   rule.minute = [0, 10, 20, 30, 40, 50]
@@ -117,7 +117,7 @@ function runOpen () {
       }, DRYRUN)
     }, {
       state: 'open',
-      limit: 50 //,
+      limit: 50 // ,
       // pageLimit: 3
     })
   })

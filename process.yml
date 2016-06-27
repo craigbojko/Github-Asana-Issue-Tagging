@@ -1,0 +1,10 @@
+apps:
+  - script : app.js
+    watch  : true
+    name  : AsanaTagging
+    env    :
+      NODE_ENV: development
+    env_production:
+      NODE_ENV: production
+    args    :
+      --color

@@ -32,6 +32,8 @@ function mainApp (qaItems, _continue, _dryRun) {
   }).catch(function (error) {
     console.log('ERROR IN ACQUIRING TASK EXISTING TAGS: '.red)
     console.log(error)
+    console.log('RESTARTING SERVICE NOW...'.yellow)
+    process.exit(1)
   })
 }
 
