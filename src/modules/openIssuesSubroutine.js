@@ -41,11 +41,11 @@ function checkTagSubroutine (qaItem) {
   return new Promise(function (resolve, reject) {
     var exp = new RegExp(/https?:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/i)
     var asanaId = qaItem && qaItem.asana_link && qaItem.asana_link.match(exp)
-    var status = qaItem.status
+    // var status = qaItem.status
     var title = qaItem.title
-    var assignee = qaItem.assignee
-    var author = qaItem.author
-    var isQAer = false
+    // var assignee = qaItem.assignee
+    // var author = qaItem.author
+    // var isQAer = false
 
     if (asanaId && asanaId.length > 1) {
       asanaId = parseInt(asanaId[1], 10)
@@ -64,10 +64,15 @@ function checkTagSubroutine (qaItem) {
 
       var filteredForQaTags = []
       var filteredForQaTagIds = []
-      var githubStatusLabel = tags.labels.qa[status]
+      // var githubStatusLabel = tags.labels.qa[status]
       var qubitStatusLabel = tags.labels.qa.map[getStatusBasedOnQaer(qaItem)]
       var statushasChanged = true
 
+      if (!asanaTags || !asanaTags.data) {
+        console.log('ERROR: NO ASANATAG DATA: %s', asanaId)
+        console.log(asanaTags)
+        return
+      }
       for (var i = 0; i < asanaTags.data.length; i++) {
         var tag = asanaTags.data[i]
         if (tags.labels.qa.hasOwnProperty(tag.id)) {
