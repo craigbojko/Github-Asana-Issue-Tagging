@@ -1,13 +1,12 @@
-
 module.exports = CustomError
 
 if (typeof Object.setPrototypeOf === 'function') {
-  Object.setPrototypeOf(CustomError.prototype, Error.prototype);
+  Object.setPrototypeOf(CustomError.prototype, Error.prototype)
 } else {
-  CustomError.prototype = Object.create(Error.prototype);
+  CustomError.prototype = Object.create(Error.prototype)
 }
 
-function CustomError(code, message) {
+function CustomError (code, message) {
   Object.defineProperty(this, 'name', {
     enumerable: false,
     writable: false,
@@ -27,7 +26,7 @@ function CustomError(code, message) {
   })
 
   if (Error.hasOwnProperty('captureStackTrace')) { // V8
-    Error.captureStackTrace(this, this.constructor);
+    Error.captureStackTrace(this, this.constructor)
   } else {
     Object.defineProperty(this, 'stack', {
       enumerable: false,
