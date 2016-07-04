@@ -31,8 +31,8 @@ function getQaIssues (config, cb) {
     repo: 'cse-code-review',
     state: state,
     per_page: limit,
-    page: pageNum,
-    labels: 'Growth' // Limit to Growth pod for testing
+    page: pageNum // ,
+    // labels: 'Growth' // Limit to Growth pod for testing
   }
 
   if (since) {

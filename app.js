@@ -117,7 +117,7 @@ function runOpen () {
       }, DRYRUN)
     }, {
       state: 'open',
-      limit: 50 // ,
+      limit: 150 // ,
       // pageLimit: 3
     })
   })
